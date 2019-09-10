@@ -9,6 +9,14 @@ function voltages_t(voltages::Vector{Float64}, t::Float64)
     return voltages
 end
 
+
+function voltages_t(voltages::Vector{Float64}, t::Float64, T_A0::Float64, T_BA::Float64, switched::Float64)
+    """ electrode voltages at time t
+    """
+    return voltages
+end
+
+
 function voltages_t(voltages::Function, t::Float64)
     """ electrode voltages at time t
     """
@@ -163,6 +171,7 @@ function traj(fa::FastAdjust, voltages::Union{Function, Vector{Float64}},
     PE = potential_energy(fa, voltages, t, xg, yg, zg, dipole)
     famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
     result = [t r[1] r[2] r[3] KE PE famp;]
+    t_kill = - log(rand(0, 1)) * T_flo #PROBABLY WRONG
     # step-by-step trajectory
     while i < max_iterations
         try
@@ -182,26 +191,76 @@ function traj(fa::FastAdjust, voltages::Union{Function, Vector{Float64}},
         # checks
         if electrode_g(fa, xg, yg, zg)
             # hit an electrode or left the pa
+            death = "Splat"
             break
-        elseif ~isnan(max_field) && famp > max_field
+        elseif ~isnan(max_field) && famp > max_field #CONVERT TO RATE
             # ionisation field
+            death = "Field Ionised"
             break
         elseif ~isnan(max_t) && t > max_t
             # time's up!
+            death = "Over Time"
             break
+        elseif t2 < t_start+t_kill
+            death = "Flouresced"
+            break
+        elseif grid_kill(r1,r2,grids,n)!=true #HAVE TO CONVERT TO THIS NOTATION
+            death = "Grid Splat"
+            break
+        
         end
         # record
-        result = vcat(result, [t r[1] r[2] r[3] KE PE famp])
+        result = vcat(result, [t r[1] r[2] r[3] KE PE famp death])
         # next step
         i += 1
     end
     # output
     if df
         result = DataFrame(result)
-        names!(result, [:t, :x, :y, :z, :KE, :PE, :famp]);
+        names!(result, [:t, :x, :y, :z, :KE, :PE, :famp, :death]);
     end
     return result
 end
+
+
+function E_Stark(n,k,m,fldamp): #CONVERT
+    first_term = 3. * n * k * e * a_Ps * fldamp/2.
+    second_term = -(1/16.) * n**4  * (17.* n**2 - 3.* k**2. -9.*m**2. +19.)* e**2. * a_Ps**2. * fldamp**2. / E_hPs   
+    third_term = (3/32.) * n**7. *k*(23.* n**2 - k**2. + 11.*m**2. + 39.)* e**3 * a_Ps**3 * fldamp**3. / (E_hPs**2.)  
+    fourth_term = -(1/1024.) * n**10. * (5487.* n**4. + 35182.* n**2 -1134.*(m**2.)*k**2. + 1806.*(n**2)*k**2 - 3402.* 
+                 (m**2.)*n**2. + 147.*k**4. -549.*m**4. + 5754.*k**2. - 8622.*m**2. +16211)* e**4. * a_Ps**4. * fldamp**4. / (E_hPs**3.)
+    Stark_Energy = first_term + second_term + third_term + fourth_term
+    return Stark_Energy                  
+
+#ionisation field for  outermost stark state with -ve stark shift / classical field
+function ionstn_rate(n,k,m,fldamp): #CONVERT
+    n2 = (-k+n-1.-m)/2.
+    E_nm = (-1.*E_hPs / (2.* n**2.)) + E_Stark(n,k,m,fldamp)
+    R = (-2.*E_nm)**1.5 / (e*a_Ps*np.sqrt(E_hPs)*fldamp)
+    A = np.exp(-(2.*R/3.) - (0.25*(n**3. *e*a_Ps*fldamp)/(E_hPs))*(34.*n2**2. + 34.*n2*m + 46.*n2 + 7.*m**2
+                    + 23.*m + 53./3.))
+    return (A * np.power(4.*R,2.*n2+m+1) * E_hPs) / (hbar* n**3. * (np.math.factorial(int(n2))) * (np.math.factorial(int(n2+m))))
+
+
+function grid_kill(r1,r2,grids,n) #CONVERT WHOLE THING
+    kill = false
+#     chance = 0.05 if n<?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+#     chance = ??? if n=?
+
+    for g in grids:
+        if z_old[2]<g and z_new[2]>g or z_old[2]>g and z_new[2]<g:
+            #print(z_old[2]*1e3,z_new[2]*1e3)
+            if np.random.uniform(0, 1)<0.05:
+                kill=True #need different if for each possible Rydberg
+    return(kill)
+end
+
 
 function traj_last(fa::FastAdjust, voltages::Union{Function, Vector{Float64}},
                    t0::Float64, r0::Vector{Float64}, v0::Vector{Float64},
