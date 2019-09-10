@@ -18,3 +18,11 @@ const a0 = 5.2917721067e-11
 const Ry = 10973731.6
 # Boltzman constant
 const kB = 1.38064852e-23
+# Rydberg constant for Ps
+const Ryd_Ps = Rydberg/2
+# Hartree energy for Ps in J
+const E_hPs = 2. * h * c * Ryd_Ps
+# Ps mass
+const m_Ps = 2. * 9.10938356e-31
+# Ps Bohr radius
+const a_Ps = 2.0 * a_0
