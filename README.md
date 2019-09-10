@@ -13,11 +13,13 @@ And import using the path to the repo, e.g.,
     julia> using FlyDi
     
 Prerequisite packages:
-HDF5
-Statistics
-DataFrames
-Plotting package is PyPlot
+
+    HDF5
+    Statistics
+    DataFrames
+(Plotting package is PyPlot)
 
 To install these you neeed to type into Julia terminal:
+
     julia> using Pkg
     julia> Pkg.add("PACKAGE NAME")
