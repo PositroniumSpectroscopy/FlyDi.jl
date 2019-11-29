@@ -98,12 +98,12 @@ function electrode_g(fa::FastAdjust2D, xg::Float64, yg::Float64, zg::Float64)
     """
     xn = Int64(floor(xg))
     yn = Int64(floor(yg))
-    if (1 <= xn < fa.nx) && (1 <= yn < fa.ny)
-        return any(fa.el[yn : yn + 1, xn : xn + 1])
-    else
+    #if (1 <= xn < fa.nx) && (1 <= yn < fa.ny)
+    return any(fa.el[yn : yn + 1, xn : xn + 1])
+    #else
         # everywhere outside the pa is an electrode
-        return true
-    end
+        #return true
+    #end
 end
 
 function electrode_g(fa::FastAdjust3D, xg::Float64, yg::Float64, zg::Float64)
@@ -112,13 +112,43 @@ function electrode_g(fa::FastAdjust3D, xg::Float64, yg::Float64, zg::Float64)
     xn = Int64(floor(xg))
     yn = Int64(floor(yg))
     zn = Int64(floor(zg))
-    if (1 <= xn < fa.nx) && (1 <= yn < fa.ny) && (1 <= zn < fa.nz)
-        return any(fa.el[zn : zn + 1, yn : yn + 1, xn : xn + 1])
+    #if (1 <= xn < fa.nx) && (1 <= yn < fa.ny) && (1 <= zn < fa.nz)
+    return any(fa.el[zn : zn + 1, yn : yn + 1, xn : xn + 1])
+    #else
+        # everywhere outside the pa is an electrode
+        #return true
+    #end
+end
+
+
+function lost_g(fa::FastAdjust2D, xg::Float64, yg::Float64, zg::Float64)
+    """ are any of the grid point adjacent to (xg, yg, zg) an electrode?
+    """
+    xn = Int64(floor(xg))
+    yn = Int64(floor(yg))
+    if (1 <= xn < fa.nx) && (1 <= yn < fa.ny)
+        return false
     else
         # everywhere outside the pa is an electrode
         return true
     end
 end
+
+function lost_g(fa::FastAdjust3D, xg::Float64, yg::Float64, zg::Float64)
+    """ are any of the grid point adjacent to (xg, yg, zg) an electrode?
+    """
+    xn = Int64(floor(xg))
+    yn = Int64(floor(yg))
+    zn = Int64(floor(zg))
+    if (1 <= xn < fa.nx) && (1 <= yn < fa.ny) && (1 <= zn < fa.nz)
+        return false
+    else
+        # everywhere outside the pa is an electrode
+        return true
+    end
+end
+
+
 
 function potential_g(fa::FastAdjust2D, voltages::Vector{Float64}, xg::Float64, yg::Float64, zg::Float64)
     """ electric potential at grid coord
