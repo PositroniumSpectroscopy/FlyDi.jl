@@ -9,42 +9,6 @@ function voltages_t(voltages::Vector{Float64}, t::Float64)
     return voltages
 end
 
-
-function voltages_t(V_base::Vector{Float64}, V_pulse::Vector{Float64}, V_delta::Vector{Float64}, t::Float64,
-                    T_A0::Vector{Float64}, T_BA::Vector{Float64}, switched::Vector{Float64}, T_rise::Float64)
-    """ electrode voltages at time t
-    """
-    A=0:length(V_base):1
-    for i in A:
-        if switched[i] = 0: #If electrode is not switched
-            V_t = V_base[i]
-#--------------------------------------------------------------------------------               
-        elseif On_Off_None[i] = 1: #If electrode is switched
-        
-            if t<T_A0[i]:
-                V_t = V_base[i]
-
-            elseif t>=T_A0[i] and t<=(T_A0[i]+T_rise):
-                delt = t-T_A0[i]
-                f = (delt/T_rise)
-                V_t = V_base[i] - V_delt[i] * f
-
-            elseif t>(T_A0[i]+T_rise) and t<(T_A0[i]+T_BA[i]):
-                V_t = V_pulse[i]
-
-            elseif t>=(T_A0[i]+T_BA[i]) and t<=(T_A0[i]+T_BA[i]+T_rise):
-                delt = t-(T_A0[i]+T_BA[i])
-                f = 1- (delt/T_rise)
-                V_t = V_base[i] + V_delt[i] * f * -1.
-
-            elseif t>(T_A0[i]+T_rise+T_BA[i]):
-                V_t = V_base[i]
-      
-        Volt_array = append!(Volt_array,V_t)
-    return Volt_array
-end
-
-
 function voltages_t(voltages::Function, t::Float64)
     """ electrode voltages at time t
     """
@@ -60,7 +24,7 @@ end
 function potential_energy(fa::FastAdjust, voltages::Union{Function, Vector{Float64}}, t::Float64, xg::Float64, yg::Float64, zg::Float64, dipole::Float64; get_famp::Bool=false)
     """ potential energy of a static dipole
     """
-    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
+    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)::Float64
     if get_famp
         return dipole * famp, famp
     else
@@ -71,8 +35,8 @@ end
 function potential_energy(fa::FastAdjust, voltages::Union{Function, Vector{Float64}}, t::Float64, xg::Float64, yg::Float64, zg::Float64, dipole::Function; get_famp::Bool=false)
     """ potential energy of a field-dependent dipole
     """
-    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
-    dpm = dipole(famp)
+    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)::Float64
+    dpm = dipole(famp)::Float64
     if get_famp
         return dpm * famp, famp
     else
@@ -84,14 +48,14 @@ function force(fa::FastAdjust3D, voltages::Union{Function, Vector{Float64}}, t::
     """ gradient of the potential energy of a dipole in an inhomegeous electric field (3D)
     """
     xg, yg, zg = grid_r(fa, r)
-    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
-    dipole = dipole_f(famp)
+    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)::Float64
+    dipole = dipole_f(famp)::Float64
     fx = -(potential_energy(fa, voltages, t, xg + 0.5, yg, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx
+           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx::Float64
     fy = -(potential_energy(fa, voltages, t, xg, yg + 0.5, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy
+           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy::Float64
     fz = -(potential_energy(fa, voltages, t, xg, yg, zg + 0.5, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg, zg - 0.5, dipole)) / fa.dz
+           potential_energy(fa, voltages, t, xg, yg, zg - 0.5, dipole)) / fa.dz::Float64
     return Vector([fx, fy, fz])
 end
 
@@ -99,13 +63,13 @@ function force(fa::FastAdjust2D, voltages::Union{Function, Vector{Float64}}, t::
     """ gradient of the potential energy of a dipole in an inhomegeous electric field (2D)
     """
     xg, yg, zg = grid_r(fa, r)
-    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
-    dipole = dipole_f(famp)
+    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)::Float64
+    dipole = dipole_f(famp)::Float64
     fx = -(potential_energy(fa, voltages, t, xg + 0.5, yg, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx
+           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx::Float64
     fy = -(potential_energy(fa, voltages, t, xg, yg + 0.5, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy
-    fz = 0.0
+           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy::Float64
+    fz = 0.0::Float64
     return Vector([fx, fy, fz])
 end
 
@@ -114,11 +78,11 @@ function force(fa::FastAdjust3D, voltages::Union{Function, Vector{Float64}}, t::
     """
     xg, yg, zg = grid_r(fa, r)
     fx = -(potential_energy(fa, voltages, t, xg + 0.5, yg, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx
+           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx::Float64
     fy = -(potential_energy(fa, voltages, t, xg, yg + 0.5, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy
+           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy::Float64
     fz = -(potential_energy(fa, voltages, t, xg, yg, zg + 0.5, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg, zg - 0.5, dipole)) / fa.dz
+           potential_energy(fa, voltages, t, xg, yg, zg - 0.5, dipole)) / fa.dz::Float64
     return Vector([fx, fy, fz])
 end
 
@@ -127,10 +91,10 @@ function force(fa::FastAdjust2D, voltages::Union{Function, Vector{Float64}}, t::
     """
     xg, yg, zg = grid_r(fa, r)
     fx = -(potential_energy(fa, voltages, t, xg + 0.5, yg, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx
+           potential_energy(fa, voltages, t, xg - 0.5, yg, zg, dipole)) / fa.dx::Float64
     fy = -(potential_energy(fa, voltages, t, xg, yg + 0.5, zg, dipole) - 
-           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy
-    fz = 0.0
+           potential_energy(fa, voltages, t, xg, yg - 0.5, zg, dipole)) / fa.dy::Float64
+    fz = 0.0::Float64
     return Vector([fx, fy, fz])
 end
 
@@ -184,131 +148,141 @@ function rk4(fa::FastAdjust, voltages::Union{Function, Vector{Float64}}, t::Floa
     return r4, v4, a3
 end
 
+function ion_classic_MaxLFS(n::Int64)
+    #((1.286 * 1e9) / (9.0 * (n^4.0))) * 100.0
+    return (((2.0 * 1.286 * 1e9) / (9.0 * (n^4.0))) * 100.0)
+end
+
+function ion_rates(n::Int64, k::Int64, m::Int64, fldamp::Float64)
+    n2 = (-k+n-1.0-m)/2.0 ::Float64
+    E_nm = (-1.0*E_hPs / (2.0* n^2.0)) + E_Stark(n,k,m,fldamp) ::Float64
+    R = (-2.0*E_nm)^1.5 / (q*a_Ps*sqrt(E_hPs)*fldamp) ::Float64
+    A = exp(-(2.0*R/3.0) - (0.25*(n^3.0 *q*a_Ps*fldamp)/(E_hPs))*(34.0*n2^2. + 34.0*n2*m + 46.0*n2 + 7.0*m^2.0
+                    + 23.0*m + 53.0/3.0)) ::Float64
+    return (A * ((4.0*R).^(2.0*n2+m+1.0)) * E_hPs) / (hbar* n^3.0 * (factorial(convert(Int8, n2))) * (factorial(convert(Int8, n2+m))))
+end
+
+function ion_none()
+end
+
+function E_Stark(n::Int64, k::Int64, m::Int64, fldamp::Float64) #CONVERT
+    first_term = (3.0/2.0) * n * k * q * a_Ps * fldamp ::Float64
+    second_term = -(1.0/16.0) * n^4.0  * (17.0 * n^2.0 - 3.0 * k^2.0 -9.0 *m^2.0 +19.0)* q^2.0 * a_Ps^2.0 * fldamp^2.0 / E_hPs  ::Float64 
+	third_term = (3.0/32.0) * n^7.0 *k*(23.0* n^2.0 - k^2.0 + 11.0*m^2.0 + 39.0)* q^3.0 * a_Ps^3.0 * fldamp^3.0 / (E_hPs^2.0)  ::Float64
+    fourth_term = -(1.0/1024.0) * n^10.0 * (5487.0* n^4.0 + 35182.0* n^2.0 -1134.0*(m^2.0)*k^2.0 + 1806.0*(n^2)*k^2.0 - 3402.0* (m^2.0)*n^2.0 + 147.0*k^4.0 -549.0*m^4.0 + 5754.0*k^2.0 - 8622.0*m^2.0 +16211.0)* q^4.0 * a_Ps^4.0 * fldamp^4.0 / (E_hPs^3.0)::Float64
+    
+    Stark_Energy = first_term + second_term + third_term + fourth_term ::Float64
+    return Stark_Energy
+end
+
+
+
 function traj(fa::FastAdjust, voltages::Union{Function, Vector{Float64}},
               t0::Float64, r0::Vector{Float64}, v0::Vector{Float64},
-              dipole::Union{Float64, Function}, mass::Float64, dt::Float64, method::Function;
-              max_field::Float64=NaN, max_t::Float64=1.0, max_iterations::Int64=Int64(1e6), df::Bool=false)
+              dipole::Union{Float64, Function}, mass::Float64, dt::Float64, method::Function,
+			  n::Int64, k::Int64, m::Int64, 
+			  ionisation::Function, killit::Function;
+              max_field::Float64=NaN, max_iterations::Int64=Int64(1e6), df::Bool=false,
+			  t_flo::Float64=NaN, t_quench::Float64=NaN, t_anni::Float64=NaN)
     """ full trajectory
     """
     # initialise
-    i = 1
+    i = 1::Int64
     t, r, v = t0, r0, v0
+	quenched = false
     a = Vector([NaN, NaN, NaN])
     xg, yg, zg = grid_r(fa, r)
-    KE = kinetic_energy(v, mass)
-    PE = potential_energy(fa, voltages, t, xg, yg, zg, dipole)
-    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)
+    KE = kinetic_energy(v, mass)::Float64
+	#dipole = -(3.0 / 2.0) * state[1] * state[2] * q * a_Ps
+    PE = potential_energy(fa, voltages, t, xg, yg, zg, dipole)::Float64
+    famp = amp_field_g(fa, voltages_t(voltages, t), xg, yg, zg)::Float64
     result = [t r[1] r[2] r[3] KE PE famp;]
-    t_kill = - log(rand(0, 1)) * T_flo #PROBABLY WRONG
+	
+	if ~isnan(t_flo)
+		t_flo_kill = (-log(rand()) * t_flo)::Float64
+	end
+	if ~isnan(t_anni)
+		t_anni_kill = (-log(rand()) * t_anni)::Float64
+	end
+
     # step-by-step trajectory
+	death = "Max Iteration"::String
     while i < max_iterations
         try
             r, v, a = method(fa, voltages, t, r, v, a, dipole, mass, dt)
-            t += dt
+            t += dt::Float64
         catch
-            death="Max Iterations"
+			death = "Tried and Failed"::String
             break
         end
-        
+		
+		#Check for invalid value
         if any(isnan, r) | any(isnan, v)
-            death="isnan"
+			death = "isnan"::String
             break
         end
-        
         # grid position
         xg, yg, zg = grid_r(fa, r)
-        
         # energy
-        KE = kinetic_energy(v, mass)
-        PE, famp = potential_energy(fa, voltages, t, xg, yg, zg, dipole, get_famp=true)
-        
-        # checks
-        if electrode_g(fa, xg, yg, zg) #MAKE SO ONLY SPLAT
-            # hit an electrode or left the pa area
-            death = "Splat"
-            break    
-        if electrode_g(fa, xg, yg, zg) #MAKE SO ONLY OUT OF PA
-            # hit an electrode or left the pa area
-            death = "Out of PA"
+        KE = kinetic_energy(v, mass)::Float64
+        PE, famp = potential_energy(fa, voltages, t, xg, yg, zg, dipole, get_famp=true)::Tuple{Float64,Float64}
+
+        # Deaths
+        if electrode_g(fa, xg, yg, zg)
+            # hit an electrode or left the pa
+			death = "Splat"::String
             break
-        elseif ~isnan(max_field) && famp > max_field #CONVERT TO RATE
+        elseif lost_g(fa, xg, yg, zg)
+            # left the pa?
+			death = "Lost"::String
+            break
+			
+        elseif ~isnan(max_field) && famp > max_field
             # ionisation field
-            death = "Field Ionised"
+			death = "Ionised (Classic)"::String
             break
-        elseif ~isnan(max_t) && t > max_t
-            # time's up!
-            death = "Over Time"
+		elseif ionisation==ion_rates && rand() > (1.0 - exp(ion_rates(n,k,m,famp)*dt*-1.0))
+            # ionisation field
+			death = "Ionised (Rate)"::String
             break
-        elseif t2 < t_start+t_kill
-            death = "Flouresced"
-            break
-        elseif grid_kill(r1,r2,grids,n)!=true #HAVE TO CONVERT TO THIS NOTATION
-            death = "Grid Splat"
-            break
-        end
-        
+			
+		elseif ~isnan(t_flo) && (t-t0) > t_flo_kill
+			death = "Fluoresced"::String
+			#Fluoresced
+			break
+		elseif ~isnan(t_anni) && (t-t0) > t_anni_kill
+			death = "Self Annihilated"::String
+			#Fluoresced
+			break
+			
+		elseif killit(t,r,v)
+			death = "Kill It"::String
+			break
+		end
+		
+		# Test for quenching
+		if ~isnan(t_quench) && t > t_quench && quenched == false
+			t_anni = 142e-9::Float64
+			t_anni_kill = (-log(rand()) * t_anni)::Float64
+			quenched = true::Bool
+		end
+		
         # record
-        result = vcat(result, [t r[1] r[2] r[3] KE PE famp death])
-        
+        result = vcat(result, [t r[1] r[2] r[3] KE PE famp])
         # next step
         i += 1
     end
-    
+	result = vcat(result, [death n k m 0.0 0.0 0.0])
+	
     # output
     if df
-        result = DataFrame(result)
-        names!(result, [:t, :x, :y, :z, :KE, :PE, :famp, :death]);
+        result = DataFrame(result)::DataFrame
+        names!(result, [:t, :x, :y, :z, :KE, :PE, :famp]);
     end
     return result
 end
 
 
-function E_Stark(n,k,m,fldamp): #CONVERT
-    first_term = 3. * n * k * e * a_Ps * fldamp/2.
-    second_term = -(1/16.) * n^4  * (17.* n^2 - 3.* k^2. -9.*m^2. +19.)* e^2. * a_Ps^2. * fldamp^2. / E_hPs   
-    third_term = (3/32.) * n^7. *k*(23.* n**2 - k^2. + 11.*m^2. + 39.)* e^3 * a_Ps^3 * fldamp^3. / (E_hPs^2.)  
-    fourth_term = -(1/1024.) * n^10. * (5487.* n^4. + 35182.* n^2 -1134.*(m^2.)*k^2. + 1806.*(n^2)*k^2 - 3402.* 
-                 (m^2.)*n^2. + 147.*k^4. -549.*m^4. + 5754.*k^2. - 8622.*m^2. +16211)* e^4. * a_Ps^4. * fldamp^4. / (E_hPs^3.)
-    Stark_Energy = first_term + second_term + third_term + fourth_term
-    return Stark_Energy                  
-
-#Ionisation rate for atom (n,k,m) in field
-function ionstn_rate(n::UInt8,k::Int8,m::Int8,fldamp::Float64): #CONVERT
-    n2 = (-k+n-1.-m)/2.
-    E_nm = (-1.*E_hPs / (2.* n^2.)) + E_Stark(n,k,m,fldamp)
-    R = (-2.*E_nm)^1.5 / (e*a_Ps*sqrt(E_hPs)*fldamp)
-    A = exp(-(2.*R/3.) - (0.25*(n^3. *e*a_Ps*fldamp)/(E_hPs))*(34.*n2^2. + 34.*n2*m + 46.*n2 + 7.*m^2
-                    + 23.*m + 53./3.))
-    return (A * np.power(4.*R,2.*n2+m+1) * E_hPs) / (hbar* n^3. * (factorial(int(n2))) * (factorial(int(n2+m))))
-
-
-function grid_kill(r1,r2,grids,n) #CONVERT WHOLE THING
-    kill = false
-                            
-#     if n<=13
-#         chance=?
-#     elseif n=14
-#         chance=?
-#     elseif n=15
-#         chance=?
-#     elseif n=16
-#         chance=?
-#     elseif n=17
-#         chance=?
-#     elseif n=18
-#         chance=?
-#     elseif n=19
-#         chance=?
-#     elseif n=20
-#         chance=?
-
-    for g in grids:
-        if z_old[2]<g and z_new[2]>g or z_old[2]>g and z_new[2]<g:
-            #print(z_old[2]*1e3,z_new[2]*1e3)
-            if np.random.uniform(0, 1)<0.05:
-                kill=True #need different if for each possible Rydberg
-    return(kill)
-end
 
 
 function traj_last(fa::FastAdjust, voltages::Union{Function, Vector{Float64}},
