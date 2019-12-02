@@ -32,6 +32,7 @@ To install these you neeed to type into Julia terminal:
 
 #Version History
 0.1 (29/11/19) - First basic version but with many bugs still to fix:
+
             -t0 of laser selected distribution is skewed to left for some reason
             -Laser selected vx bounds correct but shape not identical to python version
             -Laser selected y not selected enough
